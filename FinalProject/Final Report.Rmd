@@ -1,0 +1,118 @@
+---
+title: "Final Report SP19 Time Series"
+author: "Colin Thornburg"
+date: "April 28, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+#Final Paper
+
+##Data Set for package: astsa - U.S. Monthly Live Births
+###Data Description: 
+
+
+This dataset is provided under the ASTSA package.  It contains a total of 373 observations and is a Time Series object that contains the monthly live births (adjusted) in thousands in the US from 1948 - 1979.  
+
+see <https://www.rdocumentation.org/packages/astsa/versions/1.8/topics/birth>.
+
+
+Some summary statistics, class, frequency, start/end of the dataset, and the variation (The variance is a numerical measure of how the data values is dispersed around the mean)
+```{r birth}
+library(astsa)
+summary(birth)
+class(birth)
+mean(birth)
+sd(birth)
+min(birth)
+max(birth)
+frequency(birth)
+start(birth)
+end(birth)
+```
+
+## birth Basic Plot
+
+Basic Plot of birth time series data:
+
+```{r birthplot, echo=FALSE}
+plot(birth)
+```
+
+##Data Exploration
+
+Histogram
+
+```{r birthhist, echo=FALSE}
+hist(birth)
+```
+
+Boxplot across months
+```{r birthBox, echo=FALSE}
+boxplot(birth~cycle(birth))
+```
+
+TS Plot with abline
+```{r birthabline, echo=FALSE}
+time <- time(birth)
+plot(birth); abline(reg=lm(birth~time)) # fit a trend line
+```
+The overall trend of live birth is decreasing from 1949 - 1979.  Live births seem to have some seasonality during the late summer/early fall months.  In order to remove this seasonality component, the data will need to be de-trended by using a moving average.  A log transformation does not appear to be needed as variance does not appear to increase with time.
+
+```{r birthdetrend, echo=FALSE}
+library(forecast)
+trend_birth <- ma(birth, order=12)
+detrend_birth <- birth - trend_birth
+plot(as.ts(detrend_birth))
+```
+
+##Data Decomposition
+
+```{r birthdecomp, echo=FALSE}
+decompose_birth_add <- decompose(birth)
+plot(decompose_birth_add)
+```
+
+Overall trend appears to be decreasing over time as stated above previously.  Seasonality does seem to exist in the late summer/early fall months.  Residuals appear to be random and are not significantly increasing over time.
+
+##Regression
+
+```{r birthregression, echo=FALSE}
+birth.lm <- lm(birth ~ time)
+plot(birth.lm)
+coef(birth.lm)
+summary(birth.lm)
+```
+
+Observing the plots above, the linear model appears to fit the data well although R-squared value is low, there still might be some predictive power.
+
+##ARMA/ARIMA
+```{r birthArima, echo=FALSE}
+acf(resid(birth.lm))
+pacf(resid(birth.lm))
+```
+
+Observing the ACF plot, it does not appear to be stationary and seasonality exists that needs to be accounted for in the model
+
+
+##Model Diagnostics
+```{r birthDiagnostics, echo=FALSE}
+fitARIMA <- arima(birth, order=c(0,1,2), seasonal = list(order = c(1,1,1), period = 12),method="ML")
+fitARIMA
+```
+
+```{r birthforecast, echo=FALSE}
+plot(forecast(fitARIMA,h=20))
+```
+
+```{r birthResiduals, echo=FALSE}
+plot(resid(fitARIMA))
+acf(resid(fitARIMA))
+```
+
+Based on the plot of residuals, the mean is around 0 and do not appears to be correlated.  Looking at the ACF plot for residuals, the values are low and within the blue boundary lines.
+
