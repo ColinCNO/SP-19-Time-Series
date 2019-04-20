@@ -1,0 +1,146 @@
+#Code Portfolio
+
+##Importing/Processing time series
+
+###Install/Load Packages
+####source: https://www.dummies.com/programming/r/how-to-install-load-and-unload-packages-in-r/
+install.packages('curl')
+library(curl)
+
+
+###Built in Datasets from Package: Datasets
+####Chap. 1 Intro to TS Cowpertwait/Metcalfe
+#####View data
+data(cars)
+cars
+
+###Load a .dat file
+####Chap. 1 Intro to TS Cowpertwait/Metcalfe pg.7
+www  <-  "http://www.massey.ac.nz/~pscowper/ts/Maine.dat"
+www
+
+###Load a csv file
+####source: http://www.r-tutor.com/r-introduction/data-frame/data-import
+mydata = read.csv("myfile.csv")  # read csv file
+mydata
+
+### Load an excel file
+
+library(xlsx)
+read.xlsx("myfile.xlsx", sheetName = "Sheet1")
+
+#### Display the first 10 elements of the Nile dataset
+head(Nile, n=10)
+
+### Display the last 12 elements of the Nile dataset
+tail(Nile, n=12)
+
+##Exploratory visualization of Time Series
+
+###Chap. 1 Intro to TS Cowpertwait/Metcalfe
+###Explicitly turn data set into Time Series
+TS_seatbelts <- ts(Seatbelts, start = c(1969, 1), freq = 12)
+
+###Plot the Time series
+layout(1:2)
+plot(TS_seatbelts)
+
+###Plot just 1 column of the Series such as Drivers killed
+DriversKilled <- TS_seatbelts[, 1]
+plot(DriversKilled)
+
+###Plot the Nile data with xlab and ylab arguments
+plot(Nile, xlab = "Year", ylab = "River Volume (1e9 m^{3})")
+
+### Make a discrete time index using 1:20 
+discrete_time_index <- 1:20
+##### Now plot the continuous_series using discrete time indexing
+plot(discrete_time_index, continuous_series, type = "b")
+
+### View the start and end dates of AirPassengers
+start(AirPassengers)
+end(AirPassengers)
+### Use time(), deltat(), frequency(), and cycle() with AirPassengers 
+time(AirPassengers)
+deltat(AirPassengers)
+frequency(AirPassengers)
+cycle(AirPassengers)
+
+### Convert data_vector to a ts object with start = 2004 and frequency = 4
+time_series <- ts(data_vector, start = 2004, frequency = 4)
+print(time_series)
+plot(time_series)
+
+###Histogram
+hist(DriversKilled)
+
+###Add x and y labels on the plot
+plot(DriversKilled, ylab = "# of Drivers Killed", xlab = "Time (By Month)")
+
+###Decompose a time series - observed, trend, seasonal, random
+plot(decompose(DriversKilled))
+###Multiplicative model
+DK.decom <- decompose(DriversKilled, type = "mult")
+plot(DK.decom)
+
+### US TS Plot and add a legend
+ts.plot(EuStockMarkets, col = 1:4, xlab = "Year", ylab = "Index Value", main = "Major European Stock Indices, 1991-1998")
+legend("topleft", colnames(EuStockMarkets), lty = 1, col = 1:4, bty = "n")
+
+### Display normal quantile plots of percent returns for each index
+par(mfrow = c(2,2))
+apply(eu_percentreturns, MARGIN = 2, FUN = qqnorm, main = "")
+qqline(eu_percentreturns)
+
+
+##Time Series Analysis
+
+###Product ACF Plot - Chap. 2 Intro to TS Cowpertwait/Metcalfe
+acf(DriversKilled)
+
+### Plot the continuous_series using continuous time indexing
+par(mfrow=c(2,1))
+plot(continuous_time_index, continuous_series, type = "b")
+
+###Standard Deviation
+sd(DriversKilled)
+###Mean
+mean(DriversKilled)
+###Variance
+var(DriversKilled)
+###Covariance
+cov(DriversKilled)
+###correlation
+cor(DriversKilled)
+
+### Apply log function to help stablize data.
+###Log rapid_growth
+linear_growth <-log(AirPassengers)
+ts.plot(AirPassengers)
+ts.plot(linear_growth)
+
+### Remove Seasonal trends Generate a diff of x with lag = 4.
+dx <- diff(AirPassengers, lag = 4)
+ts.plot(dx)
+length(AirPassengers)
+length(dx)
+
+###White Noise
+###Assumptions = Mean is fixed, constant over time, constant variance, no correlation over time
+### Simulate a WN model with list(order = c(0, 0, 0))
+white_noise <- arima.sim(model = list(order = c(0, 0, 0)), n = 100)
+### Plot your white_noise data
+ts.plot(white_noise)
+### Simulate from the WN model with: mean = 100, sd = 10
+white_noise_2 <- arima.sim(model = list(order = c(0, 0, 0)), n = 100, mean = 100, sd = 10)
+### Plot your white_noise_2 data
+ts.plot(white_noise_2)
+
+###Simulate Random Walk & Generate a RW model using arima.sim
+random_walk <- arima.sim(model = list(order = c(0, 1, 0)), n = 100)
+### Plot random_walk
+ts.plot(random_walk)
+### Calculate the first difference series
+random_walk_diff <- diff(random_walk)
+### Plot random_walk_diff
+ts.plot(random_walk_diff)
